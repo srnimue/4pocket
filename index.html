@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6556a5">
+<title>お買い物メーター</title>
+<style>
+:root{--bg:#f6f5fa;--panel:#fff;--ink:#292638;--muted:#777487;--line:#e8e5ef;--accent:#6556a5;--accent2:#eeeafd;--good:#21865b;--danger:#bd4b58;--shadow:0 5px 22px #30265b0c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+header{background:linear-gradient(125deg,#51468d,#8272bd);color:white;padding:20px max(16px,calc((100% - 1050px)/2));}
+.head{max-width:1050px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:21px;margin:0;font-weight:750}.sub{font-size:12px;opacity:.82;margin-top:4px}
+main{max-width:1050px;margin:18px auto;padding:0 14px 50px}
+.topline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+select,input,textarea{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;color:var(--ink);min-width:0}
+.event-select{flex:1;min-width:180px}
+.btn{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:white;font-weight:650}
+.btn.secondary{background:#fff;color:var(--accent);border:1px solid #dcd6f0}.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}.btn.danger{background:#fff0f1;color:var(--danger);border:1px solid #f1d4d8}
+.tabs{display:flex;gap:6px;background:#eceaf3;padding:5px;border-radius:13px;margin-bottom:15px}
+.tab{flex:1;border:0;background:transparent;padding:11px 8px;border-radius:9px;color:#716d80;font-weight:700}.tab.active{background:#fff;color:var(--accent);box-shadow:var(--shadow)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+h2{font-size:16px;margin:0 0 13px}h3{font-size:14px;margin:0 0 9px}
+.muted{color:var(--muted);font-size:12px}.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.between{justify-content:space-between}.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px}.field label{font-size:12px;color:var(--muted);font-weight:650}
+.summary{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px}
+.total-card{background:linear-gradient(135deg,#51468d,#7969b5);color:white;border-radius:16px;padding:16px}.total-card .label{font-size:12px;opacity:.8}.total{font-size:30px;font-weight:800;letter-spacing:-.5px;margin:2px 0}
+.mini-card{background:white;border:1px solid var(--line);border-radius:16px;padding:15px}.mini-card strong{font-size:23px;display:block;margin-top:4px}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+.product{border:1px solid var(--line);border-radius:13px;background:#fff;padding:9px;text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0;position:relative;color:var(--ink)}
+.product:active{transform:scale(.98);background:#f7f5ff}.products.simple-mode{grid-template-columns:repeat(auto-fill,minmax(125px,1fr))}.products.simple-mode .product{padding:12px;gap:3px;min-height:66px;justify-content:center}.products.simple-mode .product img,.products.simple-mode .product .placeholder{display:none}.products.simple-mode .pname{font-size:13px}.products.simple-mode .price{font-size:14px}.view-switch{display:flex;gap:4px;background:#f0eef6;padding:3px;border-radius:9px}.view-switch button{border:0;border-radius:7px;padding:6px 9px;background:transparent;color:var(--muted);font-size:12px;font-weight:700}.view-switch button.active{background:white;color:var(--accent);box-shadow:var(--shadow)}.product img{width:100%;height:105px;object-fit:cover;border-radius:8px;background:#f0eef5}.placeholder{height:105px;border-radius:8px;background:#f0eef5;display:grid;place-items:center;color:#aaa;font-size:27px}
+.pname{font-weight:700;font-size:13px;line-height:1.35;overflow-wrap:anywhere}.price{font-size:15px;font-weight:800;color:var(--accent)}
+.qty-badge{position:absolute;right:13px;top:13px;background:var(--accent);color:white;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:800}
+.cart-list{display:flex;flex-direction:column;gap:8px}.cart-item{display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);padding:7px 0}.cart-item:last-child{border:0}.cart-name{flex:1;min-width:0;font-size:13px;font-weight:650}.cart-sub{font-size:11px;color:var(--muted)}.qty-controls{display:flex;align-items:center;gap:7px}.smallbtn{width:29px;height:29px;border:1px solid var(--line);background:white;border-radius:8px;color:var(--accent);font-weight:800}.empty{text-align:center;padding:25px;color:var(--muted);font-size:13px}
+.perk{border:1px solid var(--line);border-radius:12px;padding:12px;margin:9px 0}.perk-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.perk-count{font-size:24px;font-weight:800;color:var(--good)}.progress{height:8px;background:#eeedf2;border-radius:9px;overflow:hidden;margin:9px 0}.progress>span{display:block;height:100%;background:#37a477;border-radius:9px}.perk-foot{font-size:12px;color:var(--muted)}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product-edit{display:grid;grid-template-columns:68px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.product-edit img,.edit-placeholder{width:68px;height:68px;border-radius:9px;object-fit:cover;background:#f0eef5;display:grid;place-items:center;color:#aaa}.product-edit:last-child{border:0}
+.hidden{display:none!important}.filelabel{display:inline-flex;align-items:center;gap:6px;border:1px dashed #c9c3dc;padding:9px 12px;border-radius:10px;color:var(--accent);font-size:12px;font-weight:650;cursor:pointer}.filelabel input{display:none}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#292638;color:#fff;padding:10px 15px;border-radius:20px;font-size:12px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+footer{text-align:center;color:#999;font-size:11px;padding:10px}
+@media(max-width:600px){main{margin-top:12px}.summary{grid-template-columns:1fr}.total{font-size:25px}.products{grid-template-columns:repeat(2,minmax(0,1fr))}.product img,.placeholder{height:115px}.panel{padding:13px}.formgrid{grid-template-columns:1fr}.head{align-items:flex-start}.product-edit{grid-template-columns:58px 1fr auto}.product-edit img,.edit-placeholder{width:58px;height:58px}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><h1>お買い物メーター</h1><div class="sub">グッズ購入の合計と特典をかんたん計算</div></div><button class="btn secondary" id="eventRename">イベント名変更</button></div></header>
+<main>
+ <div class="topline"><select id="eventSelect" class="event-select" aria-label="イベント選択"></select><button class="btn" id="newEvent">＋ イベント追加</button><button class="btn ghost" id="deleteEvent">削除</button></div>
+ <nav class="tabs"><button class="tab active" data-tab="buy">お買い物</button><button class="tab" data-tab="edit">商品編集</button><button class="tab" data-tab="perks">特典設定</button></nav>
+ <section id="buyView">
+  <div class="summary">
+   <div class="total-card"><div class="label">現在の購入金額（税込）</div><div class="total" id="total">0円</div><div class="label" id="itemCount">0点</div></div>
+  </div>
+  <div class="panel"><div class="row between"><h2>商品一覧</h2><div class="view-switch" role="group" aria-label="商品表示切替"><button type="button" data-view="image">画像あり</button><button type="button" data-view="simple">シンプル</button></div></div><div class="row" style="margin:-5px 0 10px"><span class="muted">商品をタップで追加</span></div><div id="productButtons" class="products"></div><div id="noProducts" class="empty">商品がまだ登録されていません。<br>「商品編集」から追加できます。</div></div>
+  <div class="panel"><div class="row between"><h2>購入リスト</h2><button class="btn danger" id="clearCart">すべてクリア</button></div><div id="cartList" class="cart-list"></div><div id="cartEmpty" class="empty">商品を選ぶと、ここに購入リストが表示されます。</div></div>
+  <div class="panel"><h2>特典獲得状況</h2><div id="perkStatus"></div></div>
+  <div class="panel"><div class="row between"><h2>お支払いメモ</h2><span class="muted">任意</span></div><div class="row"><div class="field"><label for="budget">予算（円）</label><input id="budget" type="number" min="0" placeholder="例：15000"></div><div class="field"><label>予算残り</label><strong id="budgetLeft">未設定</strong></div></div></div>
+ </section>
+ <section id="editView" class="hidden">
+  <div class="panel"><h2>商品を登録</h2><div class="formgrid">
+   <div class="field"><label for="pName">商品名</label><input id="pName" maxlength="80" placeholder="例：アクリルスタンド"></div>
+   <div class="field"><label for="pPrice">税込価格（円）</label><input id="pPrice" type="number" min="0" step="1" placeholder="例：1650"></div>
+   <div class="field"><label for="pCategory">カテゴリー（任意）</label><input id="pCategory" maxlength="40" placeholder="例：アクリル系"></div>
+   <div class="field"><label>商品画像（任意）</label><label class="filelabel">画像を選択<input id="pImage" type="file" accept="image/*"></label><span id="imageName" class="muted">未選択</span></div>
+  </div><div class="row" style="margin-top:12px"><button class="btn" id="saveProduct">商品を追加</button><button class="btn ghost hidden" id="cancelEdit">編集をキャンセル</button></div></div>
+  <div class="panel"><div class="row between"><h2>登録済み商品</h2><span id="editCount" class="muted"></span></div><div id="productEditList"></div></div>
+ </section>
+ <section id="perksView" class="hidden">
+  <div class="panel"><h2>特典条件を登録</h2><p class="muted">税込購入金額を基準に計算します。複数の条件を登録できます。</p>
+   <div class="formgrid">
+    <div class="field"><label for="perkName">特典名</label><input id="perkName" maxlength="60" placeholder="例：ポストカード"></div>
+    <div class="field"><label for="perkType">条件タイプ</label><select id="perkType"><option value="every">〇円ごとに1個</option><option value="once">〇円以上で1個</option></select></div>
+    <div class="field"><label for="perkAmount">必要購入金額（円）</label><input id="perkAmount" type="number" min="1" step="1" placeholder="例：3000"></div>
+    <div class="field"><label for="perkUnit">1回でもらえる個数</label><input id="perkUnit" type="number" min="1" step="1" value="1"></div>
+   </div><div class="row" style="margin-top:12px"><button class="btn" id="savePerk">特典を追加</button><button class="btn ghost hidden" id="cancelPerkEdit">編集をキャンセル</button></div>
+  </div>
+  <div class="panel"><h2>登録済み特典</h2><div id="perkEditList"></div></div>
+ </section>
+ <div class="panel"><div class="row between"><div><h3>データのバックアップ</h3><div class="muted">イベント・商品画像・購入状況・特典設定をまとめて保存</div></div></div><div class="row" style="margin-top:10px"><button class="btn secondary" id="exportData">書き出し</button><label class="filelabel">読み込み<input type="file" id="importData" accept=".json,application/json"></label></div></div>
+ <footer>データはこのブラウザ内に保存されます。定期的なバックアップをおすすめします。</footer>
+</main><div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+let data={events:[],active:null},editingProduct=null,editingPerk=null,chosenImage=null;
+function freshEvent(name='新しいイベント'){return{id:uid(),name,products:[],cart:{},perks:[],budget:'',viewMode:'image'}}
+function current(){return data.events.find(e=>e.id===data.active)||data.events[0]}
+function save(){localStorage.setItem('okaimonoMeterData',JSON.stringify(data));render()}
+function yen(n){return Math.round(n||0).toLocaleString('ja-JP')+'円'}
+function total(){const e=current();return e.products.reduce((s,p)=>s+(Number(p.price)||0)*(Number(e.cart[p.id])||0),0)}
+function count(){const e=current();return Object.values(e.cart).reduce((s,n)=>s+(Number(n)||0),0)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900)}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ const e=current();if(!e)return;
+ $('eventSelect').innerHTML=data.events.map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
+ $('total').textContent=yen(total());$('itemCount').textContent=count()+'点';
+ const viewMode=e.viewMode==='simple'?'simple':'image';$('productButtons').classList.toggle('simple-mode',viewMode==='simple');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===viewMode));
+ $('noProducts').classList.toggle('hidden',e.products.length>0);
+ $('productButtons').innerHTML=e.products.map(p=>`<button class="product" data-add="${p.id}">${p.image?`<img src="${p.image}" alt="">`:`<div class="placeholder">＋</div>`}<span class="pname">${escapeHtml(p.name)}</span><span class="price">${yen(p.price)}</span>${e.cart[p.id]?`<span class="qty-badge">×${e.cart[p.id]}</span>`:''}</button>`).join('');
+ $('cartEmpty').classList.toggle('hidden',count()>0);
+ $('cartList').innerHTML=e.products.filter(p=>e.cart[p.id]>0).map(p=>`<div class="cart-item"><div class="cart-name">${escapeHtml(p.name)}<div class="cart-sub">${yen(p.price)} × ${e.cart[p.id]} = ${yen(p.price*e.cart[p.id])}</div></div><div class="qty-controls"><button class="smallbtn" data-minus="${p.id}" aria-label="1個減らす">−</button><strong>${e.cart[p.id]}</strong><button class="smallbtn" data-plus="${p.id}" aria-label="1個増やす">＋</button></div><button class="smallbtn" data-remove="${p.id}" aria-label="削除">×</button></div>`).join('');
+ $('perkStatus').innerHTML=e.perks.length?e.perks.map(p=>perkCard(p,total())).join(''):'<div class="empty">特典条件がまだ登録されていません。</div>';
+ $('budget').value=e.budget??'';const left=Number(e.budget)-total();$('budgetLeft').textContent=e.budget?yen(left):'未設定';$('budgetLeft').style.color=e.budget&&left<0?'var(--danger)':'var(--good)';
+ $('editCount').textContent=e.products.length+'件';
+ $('productEditList').innerHTML=e.products.length?e.products.map(p=>`<div class="product-edit">${p.image?`<img src="${p.image}" alt="">`:'<div class="edit-placeholder">画像なし</div>'}<div><strong>${escapeHtml(p.name)}</strong><div class="muted">${yen(p.price)} ${p.category?'・'+escapeHtml(p.category):''}</div></div><div class="row"><button class="smallbtn" data-edit-product="${p.id}">✎</button><button class="smallbtn" data-delete-product="${p.id}">×</button></div></div>`).join(''):'<div class="empty">商品はまだありません。</div>';
+ $('perkEditList').innerHTML=e.perks.length?e.perks.map(p=>`<div class="product-edit"><div class="edit-placeholder">🎁</div><div><strong>${escapeHtml(p.name)}</strong><div class="muted">${p.type==='every'?'毎': '一度'}${yen(p.amount)}${p.type==='every'?'ごと':'以上'}・${p.unit}個</div></div><div class="row"><button class="smallbtn" data-edit-perk="${p.id}">✎</button><button class="smallbtn" data-delete-perk="${p.id}">×</button></div></div>`).join(''):'<div class="empty">特典はまだありません。</div>';
+}
+function perkCard(p,sum){
+ const n=p.type==='every'?Math.floor(sum/p.amount):sum>=p.amount?1:0;
+ const next=p.type==='every'?(n+1)*p.amount: p.amount;
+ const remain=Math.max(0,next-sum),progress=p.type==='every'?(sum%p.amount)/p.amount*100:Math.min(100,sum/p.amount*100);
+ return `<div class="perk"><div class="perk-top"><div><strong>${escapeHtml(p.name)}</strong><div class="muted">${p.type==='every'?yen(p.amount)+'ごと':' '+yen(p.amount)+'以上'}で${p.unit}個</div></div><div style="text-align:right"><div class="perk-count">${n*p.unit}個</div><div class="muted">獲得予定</div></div></div><div class="progress"><span style="width:${progress}%"></span></div><div class="perk-foot">${remain===0?'条件達成！':`次の${p.type==='every'?'1回':'獲得'}まであと ${yen(remain)}`}</div></div>`;
+}
+function switchTab(tab){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));['buy','edit','perks'].forEach(x=>$(x+'View').classList.toggle('hidden',x!==tab))}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+$('eventSelect').addEventListener('change',e=>{data.active=e.target.value;save()});
+$('newEvent').onclick=()=>{const name=prompt('イベント名を入力してください','新しいイベント');if(name===null)return;const e=freshEvent(name.trim()||'新しいイベント');data.events.push(e);data.active=e.id;save();toast('イベントを追加しました')};
+$('eventRename').onclick=()=>{const e=current(),name=prompt('イベント名を変更',e.name);if(name===null)return;e.name=name.trim()||e.name;save()};
+$('deleteEvent').onclick=()=>{if(data.events.length===1){toast('最後のイベントは削除できません');return}if(!confirm('このイベントと登録データを削除しますか？'))return;data.events=data.events.filter(e=>e.id!==data.active);data.active=data.events[0].id;save()};
+document.querySelector('.view-switch').addEventListener('click',ev=>{const b=ev.target.closest('[data-view]');if(!b)return;current().viewMode=b.dataset.view;save()});
+$('productButtons').addEventListener('click',ev=>{const b=ev.target.closest('[data-add]');if(!b)return;const e=current(),id=b.dataset.add;e.cart[id]=(e.cart[id]||0)+1;save()});
+$('cartList').addEventListener('click',ev=>{const e=current(),b=ev.target.closest('button');if(!b)return;const id=b.dataset.minus||b.dataset.plus||b.dataset.remove;if(!id)return;if(b.dataset.minus){e.cart[id]=Math.max(0,(e.cart[id]||0)-1);if(!e.cart[id])delete e.cart[id]}if(b.dataset.plus)e.cart[id]=(e.cart[id]||0)+1;if(b.dataset.remove)delete e.cart[id];save()});
+$('clearCart').onclick=()=>{if(!count())return;if(confirm('購入リストをすべてクリアしますか？')){current().cart={};save()}};
+$('budget').addEventListener('change',e=>{current().budget=e.target.value;save()});
+function resetProductForm(){editingProduct=null;chosenImage=null;$('pName').value='';$('pPrice').value='';$('pCategory').value='';$('pImage').value='';$('imageName').textContent='未選択';$('saveProduct').textContent='商品を追加';$('cancelEdit').classList.add('hidden')}
+$('pImage').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{chosenImage=await compressImage(f);$('imageName').textContent=f.name+'（圧縮済み）'}catch(err){toast('画像を読み込めませんでした')}};
+function compressImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const max=600,scale=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',.78))};img.onerror=reject;img.src=url})}
+$('saveProduct').onclick=()=>{const name=$('pName').value.trim(),price=$('pPrice').value;if(!name||price===''||Number(price)<0||!Number.isFinite(Number(price))){toast('商品名と税込価格を入力してください');return}const e=current();if(editingProduct){const p=e.products.find(x=>x.id===editingProduct);Object.assign(p,{name,price:Number(price),category:$('pCategory').value.trim(),image:chosenImage??p.image??''})}else e.products.push({id:uid(),name,price:Number(price),category:$('pCategory').value.trim(),image:chosenImage||''});resetProductForm();save();toast('商品を保存しました')};
+$('cancelEdit').onclick=resetProductForm;
+$('productEditList').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const e=current(),id=b.dataset.editProduct||b.dataset.deleteProduct,p=e.products.find(x=>x.id===id);if(b.dataset.editProduct){editingProduct=id;chosenImage=null;$('pName').value=p.name;$('pPrice').value=p.price;$('pCategory').value=p.category||'';$('pImage').value='';$('imageName').textContent=p.image?'登録済み画像あり（変更する場合のみ選択）':'未選択';$('saveProduct').textContent='変更を保存';$('cancelEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}else if(confirm('「'+p.name+'」を削除しますか？')){e.products=e.products.filter(x=>x.id!==id);delete e.cart[id];save()}});
+function resetPerkForm(){editingPerk=null;$('perkName').value='';$('perkAmount').value='';$('perkUnit').value='1';$('perkType').value='every';$('savePerk').textContent='特典を追加';$('cancelPerkEdit').classList.add('hidden')}
+$('savePerk').onclick=()=>{const name=$('perkName').value.trim(),amount=Number($('perkAmount').value),unit=Number($('perkUnit').value),type=$('perkType').value;if(!name||!Number.isInteger(amount)||amount<1||!Number.isInteger(unit)||unit<1){toast('特典名・金額・個数を正しく入力してください');return}const e=current(),obj={name,amount,unit,type};if(editingPerk)Object.assign(e.perks.find(p=>p.id===editingPerk),obj);else e.perks.push({id:uid(),...obj});resetPerkForm();save();toast('特典条件を保存しました')};
+$('cancelPerkEdit').onclick=resetPerkForm;
+$('perkEditList').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const e=current(),id=b.dataset.editPerk||b.dataset.deletePerk,p=e.perks.find(x=>x.id===id);if(b.dataset.editPerk){editingPerk=id;$('perkName').value=p.name;$('perkAmount').value=p.amount;$('perkUnit').value=p.unit;$('perkType').value=p.type;$('savePerk').textContent='変更を保存';$('cancelPerkEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}else if(confirm('この特典条件を削除しますか？')){e.perks=e.perks.filter(x=>x.id!==id);save()}});
+$('exportData').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='okaimono-meter-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('バックアップを書き出しました')};
+$('importData').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text());if(!parsed||!Array.isArray(parsed.events)||!parsed.events.length||!parsed.events.every(e=>Array.isArray(e.products)&&e.cart&&Array.isArray(e.perks)))throw Error();if(!confirm('現在のデータを読み込んだデータで置き換えます。よろしいですか？'))return;data=parsed;if(!data.events.some(e=>e.id===data.active))data.active=data.events[0].id;save();toast('バックアップを読み込みました')}catch(err){alert('読み込めませんでした。有効なバックアップJSONか確認してください。')}finally{ev.target.value=''}};
+const stored=localStorage.getItem('okaimonoMeterData');if(stored){try{const parsed=JSON.parse(stored);if(Array.isArray(parsed.events)&&parsed.events.length)data=parsed}catch(e){}}
+if(!data.events.length){const e=freshEvent('イベント');data.events=[e];data.active=e.id}
+if(!current())data.active=data.events[0].id;
+render();
+</script>
+</body></html>
