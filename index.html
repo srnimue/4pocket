@@ -75,6 +75,7 @@ footer{text-align:center;color:#999;font-size:11px;padding:10px}
   <div class="panel"><h2>登録済み特典</h2><div id="perkEditList"></div></div>
  </section>
  <div class="panel"><div class="row between"><div><h3>データのバックアップ</h3><div class="muted">イベント・商品画像・購入状況・特典設定をまとめて保存</div></div></div><div class="row" style="margin-top:10px"><button class="btn secondary" id="exportData">書き出し</button><label class="filelabel">読み込み<input type="file" id="importData" accept=".json,application/json"></label></div></div>
+ <div class="panel"><div class="row between"><div><h3>イベント共有</h3><div class="muted">選択中のイベントの商品リスト・特典設定だけを共有（画像・購入状況・予算は含みません）</div></div></div><div class="row" style="margin-top:10px"><button class="btn secondary" id="exportEvent">イベントを書き出し</button><label class="filelabel">イベントを追加<input type="file" id="importEvent" accept=".json,application/json"></label></div></div>
  <footer>データはこのブラウザ内に保存されます。定期的なバックアップをおすすめします。</footer>
 </main><div class="toast" id="toast"></div>
 <script>
@@ -92,7 +93,7 @@ function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;',
 function render(){
  const e=current();if(!e)return;
  $('eventSelect').innerHTML=data.events.map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
- $('total').textContent=yen(total());$('itemCount').textContent=count()+'点';
+ $('total').textContent=yen(total());$('itemCount').textContent=count()+'点 ／ 特典 '+plannedPerkTotal(e,total());
  const viewMode=e.viewMode==='simple'?'simple':'image';$('productButtons').classList.toggle('simple-mode',viewMode==='simple');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===viewMode));
  $('noProducts').classList.toggle('hidden',e.products.length>0);
  $('productButtons').innerHTML=e.products.map(p=>`<button class="product" data-add="${p.id}">${p.image?`<img src="${p.image}" alt="">`:`<div class="placeholder">＋</div>`}<span class="pname">${escapeHtml(p.name)}</span><div class="product-meta"><span class="price">${yen(p.price)}</span>${e.cart[p.id]?`<span class="qty-badge">×${e.cart[p.id]}</span>`:''}</div></button>`).join('');
@@ -103,6 +104,13 @@ function render(){
  $('editCount').textContent=e.products.length+'件';
  $('productEditList').innerHTML=e.products.length?e.products.map(p=>`<div class="product-edit">${p.image?`<img src="${p.image}" alt="">`:'<div class="edit-placeholder">画像なし</div>'}<div><strong>${escapeHtml(p.name)}</strong><div class="muted">${yen(p.price)} ${p.category?'・'+escapeHtml(p.category):''}</div></div><div class="row"><button class="smallbtn" data-edit-product="${p.id}">✎</button><button class="smallbtn" data-delete-product="${p.id}">×</button></div></div>`).join(''):'<div class="empty">商品はまだありません。</div>';
  $('perkEditList').innerHTML=e.perks.length?e.perks.map(p=>`<div class="product-edit"><div class="edit-placeholder">🎁</div><div><strong>${escapeHtml(p.name)}</strong><div class="muted">${p.type==='every'?'毎': '一度'}${yen(p.amount)}${p.type==='every'?'ごと':'以上'}・${p.unit}個</div></div><div class="row"><button class="smallbtn" data-edit-perk="${p.id}">✎</button><button class="smallbtn" data-delete-perk="${p.id}">×</button></div></div>`).join(''):'<div class="empty">特典はまだありません。</div>';
+}
+function perkCount(p,sum){
+ const n=p.type==='every'?Math.floor(sum/p.amount):sum>=p.amount?1:0;
+ return n*(Number(p.unit)||0);
+}
+function plannedPerkTotal(e,sum){
+ return e.perks.reduce((total,p)=>total+perkCount(p,sum),0);
 }
 function perkCard(p,sum){
  const n=p.type==='every'?Math.floor(sum/p.amount):sum>=p.amount?1:0;
@@ -133,6 +141,44 @@ $('cancelPerkEdit').onclick=resetPerkForm;
 $('perkEditList').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const e=current(),id=b.dataset.editPerk||b.dataset.deletePerk,p=e.perks.find(x=>x.id===id);if(b.dataset.editPerk){editingPerk=id;$('perkName').value=p.name;$('perkAmount').value=p.amount;$('perkUnit').value=p.unit;$('perkType').value=p.type;$('savePerk').textContent='変更を保存';$('cancelPerkEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}else if(confirm('この特典条件を削除しますか？')){e.perks=e.perks.filter(x=>x.id!==id);save()}});
 $('exportData').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='okaimono-meter-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('バックアップを書き出しました')};
 $('importData').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text());if(!parsed||!Array.isArray(parsed.events)||!parsed.events.length||!parsed.events.every(e=>Array.isArray(e.products)&&e.cart&&Array.isArray(e.perks)))throw Error();if(!confirm('現在のデータを読み込んだデータで置き換えます。よろしいですか？'))return;data=parsed;if(!data.events.some(e=>e.id===data.active))data.active=data.events[0].id;save();toast('バックアップを読み込みました')}catch(err){alert('読み込めませんでした。有効なバックアップJSONか確認してください。')}finally{ev.target.value=''}};
+// イベント共有：購入途中の状態や画像を含めず、商品・特典の設定だけを書き出す。
+$('exportEvent').onclick=()=>{
+ const e=current();if(!e)return;
+ const shared={format:'okaimono-meter-event',version:1,event:{
+  name:e.name,
+  products:e.products.map(p=>({name:p.name,price:Number(p.price),category:p.category||''})),
+  perks:e.perks.map(p=>({name:p.name,amount:Number(p.amount),unit:Number(p.unit),type:p.type}))
+ }};
+ const blob=new Blob([JSON.stringify(shared,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);
+ a.href=url;a.download='okaimono-meter-event-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);toast('イベント共有JSONを書き出しました');
+};
+$('importEvent').onchange=async ev=>{
+ const f=ev.target.files[0];if(!f)return;
+ try{
+  const parsed=JSON.parse(await f.text()),shared=parsed&&parsed.event;
+  if(!parsed||parsed.format!=='okaimono-meter-event'||parsed.version!==1||!shared||
+   typeof shared.name!=='string'||!shared.name.trim()||
+   !Array.isArray(shared.products)||!Array.isArray(shared.perks))throw Error('format');
+  const products=shared.products.map(p=>{
+   if(!p||typeof p.name!=='string'||!p.name.trim()||p.name.length>80||
+    typeof p.price!=='number'||!Number.isFinite(p.price)||p.price<0||
+    (p.category!==undefined&&(typeof p.category!=='string'||p.category.length>40)))throw Error('product');
+   return{id:uid(),name:p.name.trim(),price:p.price,category:p.category||'',image:''};
+  });
+  const perks=shared.perks.map(p=>{
+   if(!p||typeof p.name!=='string'||!p.name.trim()||p.name.length>60||
+    !Number.isInteger(p.amount)||p.amount<1||!Number.isInteger(p.unit)||p.unit<1||
+    !['every','once'].includes(p.type))throw Error('perk');
+   return{id:uid(),name:p.name.trim(),amount:p.amount,unit:p.unit,type:p.type};
+  });
+  const added=freshEvent(shared.name.trim());
+  added.products=products;added.perks=perks;added.cart={};added.budget='';added.viewMode='image';
+  data.events.push(added);data.active=added.id;save();toast('イベントを新しく追加しました');
+ }catch(err){
+  alert('読み込めませんでした。有効なお買い物メーターのイベント共有JSONか確認してください。');
+ }finally{ev.target.value=''}
+};
 const stored=localStorage.getItem('okaimonoMeterData');if(stored){try{const parsed=JSON.parse(stored);if(Array.isArray(parsed.events)&&parsed.events.length)data=parsed}catch(e){}}
 if(!data.events.length){const e=freshEvent('イベント');data.events=[e];data.active=e.id}
 if(!current())data.active=data.events[0].id;
